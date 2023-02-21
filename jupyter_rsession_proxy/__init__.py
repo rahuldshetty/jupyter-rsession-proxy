@@ -1,5 +1,6 @@
 import getpass
 import os
+import pwd
 import pathlib
 import shutil
 import subprocess
@@ -27,6 +28,13 @@ def get_icon_path():
     return os.path.join(
         os.path.dirname(os.path.abspath(__file__)), 'icons', 'rstudio.svg'
     )
+
+def get_system_user():
+    try:
+        user = pwd.getpwuid(os.getuid())[0]
+    except:
+        user = os.environ.get('NB_USER', getpass.getuser())
+    return(user)
 
 def setup_rserver():
     def _get_env(port):
@@ -60,7 +68,8 @@ def setup_rserver():
             '--auth-none=1',
             '--www-frame-origin=same',
             '--www-port=' + str(port),
-            '--www-verify-user-agent=0'
+            '--www-verify-user-agent=0',
+            '--server-user=' + get_system_user(),
         ]
 
         # Add additional options for RStudio >= 1.4.x. Since we cannot
@@ -114,7 +123,7 @@ def setup_rsession():
             '--program-mode=server',
             '--log-stderr=1',
             '--session-timeout-minutes=0',
-            '--user-identity=' + getpass.getuser(),
+            '--user-identity=' + get_system_user(),
             '--www-port=' + str(port)
         ]
 
